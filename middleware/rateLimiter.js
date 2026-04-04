@@ -1,37 +1,23 @@
-// middleware/rateLimiter.js
+const requests = {};
 
-const store = new Map(); // key: "IP::METHOD::PATH" → [timestamps]
-let rules = [];          // loaded from config.json
+module.exports = function (req, res, next) {
+  const ip = req.ip;
+  const currentTime = Date.now();
 
-function loadRules(config) {
-  rules = config.rate_limits || [];
-}
-
-function getRuleFor(method, path) {
-  return rules.find(r => r.method === method && r.path === path) || null;
-}
-
-function isAllowed(ip, method, path) {
-  const rule = getRuleFor(method, path);
-  if (!rule) return { allowed: true };  // no rule = allow
-
-  const key = `${ip}::${method}::${path}`;
-  const now = Date.now();
-  const windowMs = rule.window_seconds * 1000;
-
-  const timestamps = (store.get(key) || []).filter(t => now - t < windowMs);
-  
-  if (timestamps.length >= rule.limit) {
-    return { allowed: false, reason: `Exceeded ${rule.method} ${rule.path} rate limit` };
+  if (!requests[ip]) {
+    requests[ip] = [];
   }
 
-  timestamps.push(now);
-  store.set(key, timestamps);
-  return { allowed: true };
-}
+  // keep only last 60 seconds
+  requests[ip] = requests[ip].filter(
+    (timestamp) => currentTime - timestamp < 60000
+  );
 
-// For dashboard stats exposure
-function getBlockedIPs() { /* return blocked list */ }
-function getStats() { /* return req/sec counters */ }
+  // limit = 10 requests per minute
+  if (requests[ip].length >= 10) {
+    return res.status(429).send("Too many requests!");
+  }
 
-module.exports = { loadRules, isAllowed, getBlockedIPs, getStats };
+  requests[ip].push(currentTime);
+  next();
+};
