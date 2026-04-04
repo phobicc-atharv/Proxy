@@ -1,30 +1,37 @@
-let blockedRequests = 0;
+// middleware/rateLimiter.js
 
-function rateLimiter(req, res, next) {
-  const ip = req.ip;
-  const currentTime = Date.now();
+const store = new Map(); // key: "IP::METHOD::PATH" → [timestamps]
+let rules = [];          // loaded from config.json
 
-  if (!global.requests) {
-    global.requests = {};
-  }
-
-  if (!global.requests[ip]) {
-    global.requests[ip] = [];
-  }
-
-  global.requests[ip] = global.requests[ip].filter(
-    (t) => currentTime - t < 60000
-  );
-
-  if (global.requests[ip].length >= 10) {
-    blockedRequests++;
-    return res.status(429).send("Too many requests! Blocked.");
-  }
-
-  global.requests[ip].push(currentTime);
-  next();
+function loadRules(config) {
+  rules = config.rate_limits || [];
 }
 
-rateLimiter.getBlocked = () => blockedRequests;
+function getRuleFor(method, path) {
+  return rules.find(r => r.method === method && r.path === path) || null;
+}
 
-module.exports = rateLimiter;
+function isAllowed(ip, method, path) {
+  const rule = getRuleFor(method, path);
+  if (!rule) return { allowed: true };  // no rule = allow
+
+  const key = `${ip}::${method}::${path}`;
+  const now = Date.now();
+  const windowMs = rule.window_seconds * 1000;
+
+  const timestamps = (store.get(key) || []).filter(t => now - t < windowMs);
+  
+  if (timestamps.length >= rule.limit) {
+    return { allowed: false, reason: `Exceeded ${rule.method} ${rule.path} rate limit` };
+  }
+
+  timestamps.push(now);
+  store.set(key, timestamps);
+  return { allowed: true };
+}
+
+// For dashboard stats exposure
+function getBlockedIPs() { /* return blocked list */ }
+function getStats() { /* return req/sec counters */ }
+
+module.exports = { loadRules, isAllowed, getBlockedIPs, getStats };
