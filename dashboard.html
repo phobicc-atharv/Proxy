@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CyberShield Dashboard</title>
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+      background: #0f172a;
+      color: white;
+    }
+    h1 {
+      margin-top: 20px;
+    }
+    .box {
+      display: inline-block;
+      margin: 20px;
+      padding: 20px;
+      border-radius: 10px;
+      width: 200px;
+      font-size: 20px;
+    }
+    .total { background: #3b82f6; }
+    .allowed { background: #22c55e; }
+    .blocked { background: #ef4444; }
+  </style>
+</head>
+<body>
+
+<h1>🚀 CyberShield Dashboard</h1>
+
+<div class="box total">
+  Total Requests<br>
+  <span id="total">0</span>
+</div>
+
+<div class="box allowed">
+  Allowed Requests<br>
+  <span id="allowed">0</span>
+</div>
+
+<div class="box blocked">
+  Blocked Requests<br>
+  <span id="blocked">0</span>
+</div>
+
+<script>
+async function loadData() {
+  const res = await fetch("http://localhost:9090/dashboard");
+  const data = await res.json();
+
+  document.getElementById("total").innerText = data.totalRequests;
+  document.getElementById("allowed").innerText = data.allowedRequests;
+  document.getElementById("blocked").innerText = data.blockedRequests;
+}
+
+setInterval(loadData, 1000);
+</script>
+
+</body>
+</html>

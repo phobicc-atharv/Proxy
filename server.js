@@ -5,10 +5,29 @@ const security = require("./middleware/security");
 
 const app = express();
 
-// Apply rate limiting
+let totalRequests = 0;
+
+// Count all requests
+app.use((req, res, next) => {
+  totalRequests++;
+  next();
+});
+
+// Middlewares
 app.use(rateLimiter);
 app.use(express.json());
 app.use(security);
+
+// ✅ Dashboard API (ADD THIS)
+app.get("/dashboard", (req, res) => {
+  const blocked = rateLimiter.getBlocked();
+
+  res.json({
+    totalRequests,
+    blockedRequests: blocked,
+    allowedRequests: totalRequests - blocked,
+  });
+});
 
 // Proxy
 app.use(
