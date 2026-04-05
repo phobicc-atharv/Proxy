@@ -1,70 +1,151 @@
-# Getting Started with Create React App
+# 🛡️ ORCHATHON — Next-Gen Reverse Proxy Demo
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+> A live, interactive demonstration of a production-grade reverse proxy with WAF, rate limiting, circuit breaking, and real-time security monitoring — built for hackathon judges and recruiters.
 
-## Available Scripts:
+---
 
-In the project directory, you can run:
+## 🚀 Quick Start (Windows)
 
-### `npm start`
+```
+1. Double-click  →  start.bat
+2. Open browser  →  http://localhost:3000
+```
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+That's it. All 4 servers spin up automatically.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+---
 
-### `npm test`
+## 🖥️ Manual Start (4 Terminals)
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```bash
+# Terminal 1 — Target website (the victim)
+node website.js
 
-### `npm run build`
+# Terminal 2 — OrchProxy + Live Dashboard
+node proxy.js
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+# Terminal 3 — Demo Presentation Controller
+node demo_controller.js
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+# Open in browser
+http://localhost:3000
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+---
 
-### `npm run eject`
+## 🗺️ Port Map
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+| Port | Service | Role |
+|------|---------|------|
+| **3000** | Demo Controller | Presentation UI — open on projector |
+| **8080** | ShopSecure | Target website / backend API |
+| **9090** | OrchProxy | The invisible middleman |
+| **9091** | Dashboard | Live security monitoring (SSE) |
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+---
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## 🎯 Demo Flow — Step by Step
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### Step 1 — Show the Unprotected Site
+- Open `http://localhost:3000` on the projector
+- The **LEFT panel** shows ShopSecure running directly on `:8080`
+- Header displays **⚠ UNPROTECTED**
 
-## Learn More
+### Step 2 — Run Attacks WITHOUT the Proxy
+| Attack | What Happens |
+|--------|-------------|
+| **DDoS Flood** | All 30 requests reach the backend |
+| **Brute Force** | All login attempts hit the server |
+| **SQL Inject** | Malicious queries reach the database layer |
+> ⚠️ Without protection, the site would crash or get compromised.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### Step 3 — Enable the Proxy *(the moment of truth)*
+- Click **🛡 Enable Proxy** in the bottom bar
+- Header switches to **🛡 PROTECTED**
+- All traffic now routes through `:9090`
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### Step 4 — Run the SAME Attacks WITH the Proxy
+| Attack | Result |
+|--------|--------|
+| **DDoS Flood** | ⚡ All requests blocked with `429 Too Many Requests` |
+| **Brute Force** | ⚡ Blocked after 5 attempts |
+| **SQL Inject** | 🛡️ WAF intercepts all payloads |
+| **XSS Attack** | 🛡️ WAF intercepts all payloads |
+| **Blacklisted IP** | ⛔ Instant `403 Forbidden` |
 
-### Code Splitting:
+### Step 5 — Show Legit Traffic Still Works
+- Click **✅ Legit User** → all 4 requests pass through cleanly
+- Proves the proxy doesn't block normal usage
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+### Step 6 — Show the Live Dashboard
+- **RIGHT panel** shows the OrchProxy monitoring dashboard
+- Displays: blocked request count, RPS, top attackers, security event log
+- All data streams in **real-time via SSE**
 
-### Analyzing the Bundle Size:
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## ⚙️ Features
 
-### Making a Progressive Web App:
+- 🔁 **Reverse Proxy** — Transparent request forwarding to the backend
+- 🚦 **Rate Limiting** — Per-route configurable request limits
+- 🧱 **WAF (Web Application Firewall)** — Blocks SQLi, XSS, path traversal, command injection
+- ⚡ **Circuit Breaker** — Auto-trips on backend failures, self-heals after timeout
+- 🌐 **IP Blacklisting** — Instant block for known bad actors
+- 📊 **Live Dashboard** — Real-time security events via Server-Sent Events (SSE)
+- 🔄 **Hot Config Reload** — Edit `config.json` without restarting
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+---
 
-### Advanced Configuration:
+## 📁 File Structure
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+```
+orchathon/
+├── proxy.js             # Core reverse proxy — rate limiter, WAF, circuit breaker
+├── website.js           # ShopSecure — target e-commerce site (the victim)
+├── demo_controller.js   # 3-panel presentation UI with attack buttons
+├── config.json          # Proxy configuration (hot-reloaded)
+├── start.bat            # One-click Windows launcher
+└── README.md
+```
 
-### Deployment:
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+## 🔧 Configuration (`config.json`)
 
-### `npm run build` fails to minify:
+```json
+{
+  "server": { "listen_port": 9090, "backend_url": "http://localhost:8080" },
+  "rate_limits": [
+    { "path": "/login", "method": "POST", "limit": 5, "window_seconds": 60 }
+  ],
+  "security": {
+    "block_sql_injection": true,
+    "block_xss": true,
+    "blacklisted_ips": ["203.0.113.42"]
+  },
+  "circuit_breaker": { "enabled": true, "failure_threshold": 5 }
+}
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Modify this file at runtime — changes apply instantly without restart.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Runtime:** Node.js (no external dependencies)
+- **Architecture:** Reverse proxy pattern with middleware pipeline
+- **Real-time:** Server-Sent Events (SSE) for dashboard streaming
+- **Frontend:** Vanilla HTML/CSS/JS (zero framework overhead)
+
+---
+
+## 👥 Team
+
+**Team Vision Coders** — Built for ORCHATHON Hackathon
+
+---
+
+## 📄 License
+
+MIT — free to use, modify, and build upon.
