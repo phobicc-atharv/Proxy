@@ -1,0 +1,52 @@
+{
+  "server": {
+    "listen_port": 9090,
+    "backend_url": "http://localhost:8080",
+    "dashboard_port": 9091,
+    "request_timeout_ms": 10000,
+    "max_body_size_bytes": 1048576
+  },
+  "rate_limits": [
+    {
+      "path": "/getAllUsers",
+      "method": "GET",
+      "limit": 100,
+      "window_seconds": 60,
+      "description": "Standard read endpoint"
+    },
+    {
+      "path": "/login",
+      "method": "POST",
+      "limit": 5,
+      "window_seconds": 60,
+      "description": "Brute-force login protection"
+    },
+    {
+      "path": "/api",
+      "method": "*",
+      "limit": 200,
+      "window_seconds": 60,
+      "description": "General API rate limit"
+    }
+  ],
+  "security": {
+    "block_sql_injection": true,
+    "block_xss": true,
+    "block_path_traversal": true,
+    "block_command_injection": true,
+    "blacklisted_ips": [
+      "203.0.113.42",
+      "198.51.100.0"
+    ]
+  },
+  "circuit_breaker": {
+    "enabled": true,
+    "failure_threshold": 5,
+    "recovery_timeout_ms": 30000
+  },
+  "health_check": {
+    "enabled": true,
+    "path": "/health",
+    "interval_ms": 5000
+  }
+}
