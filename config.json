@@ -48,5 +48,13 @@
     "enabled": true,
     "path": "/health",
     "interval_ms": 5000
+  },
+  {
+  "name": "proxy",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
   }
+}
 }
